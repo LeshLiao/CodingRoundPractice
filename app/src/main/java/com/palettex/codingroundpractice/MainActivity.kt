@@ -20,11 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CodingRoundPracticeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainPage(
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MainPage()
             }
         }
     }
