@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,53 +22,110 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.palettex.codingroundpractice.presentation.viewmodel.UserViewModel
+import com.palettex.codingroundpractice.data.entity.ForecastWeatherResponse
+import com.palettex.codingroundpractice.data.entity.WeatherResponse
+import com.palettex.codingroundpractice.presentation.viewmodel.WeatherViewModel
 import com.palettex.codingroundpractice.ui.theme.CodingRoundPracticeTheme
 
 @Composable
-fun MainPage(viewModel: UserViewModel = viewModel()) {
-
+fun MainPage(viewModel: WeatherViewModel = viewModel()) {
     val currentWeatherState by viewModel.currentWeatherState.collectAsState()
     val forecastWeatherState by viewModel.forecastWeatherState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.getCurrentWeather("Taiwan")
+         viewModel.getCurrentWeather("Taiwan")
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            Button(
-                onClick = {
-                    Log.d("GDT", "Click button!")
-                    viewModel.getCurrentWeather("Taiwan")
-                    viewModel.getForecastWeather("Taiwan", 3)
+
+            WeatherActionButtons(
+                onFetchConcurrently = {
+                    viewModel.fetchWeatherDataConcurrently("Taiwan", 3)
+                },
+                onFetchSequentially = {
+                    viewModel.fetchWeatherDataSequentially("Taiwan", 3)
+                },
+                onCancel = {
+                    viewModel.cancelAllRequests()
                 }
-            ) {
-                Text(text = "Get Forecast Weather")
-            }
+            )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Current Weather Section
             CurrentWeatherSection(currentWeatherState)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Forecast Weather Section
             ForecastWeatherSection(forecastWeatherState)
         }
     }
 }
 
 @Composable
-fun CurrentWeatherSection(currentWeatherState: UiState<com.palettex.codingroundpractice.data.entity.WeatherResponse>) {
+fun WeatherActionButtons(
+    onFetchConcurrently: () -> Unit,
+    onFetchSequentially: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Log.d("GDT", "WeatherActionButtons recomposed")
+
+    // Concurrent fetch button - faster execution
+    Button(
+        onClick = onFetchConcurrently,
+    ) {
+        Column {
+            Text(
+                text = "Fetch Weather Concurrently",
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "⚡ Faster (~2 seconds)",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    // Sequential fetch button - slower but shows current weather first
+    Button(
+        onClick = onFetchSequentially,
+    ) {
+        Column {
+            Text(
+                text = "Fetch Weather Sequentially",
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "🔄 Shows current first (~4 seconds)",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    // Cancel button
+    OutlinedButton(
+        onClick = onCancel
+    ) {
+        Text("Cancel All Requests")
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+}
+
+@Composable
+fun CurrentWeatherSection(currentWeatherState: UiState<WeatherResponse>) {
     Text(
         text = "Current Weather",
         fontSize = 20.sp,
@@ -89,6 +147,12 @@ fun CurrentWeatherSection(currentWeatherState: UiState<com.palettex.codingroundp
         }
         is UiState.Success -> {
             val weather = currentWeatherState.data
+
+            // Testing api no response specific value,
+            // moshi set it to default value
+            // Log.d("GDT","test_value=" + weather.testValue.equals("123"))
+            // Log.d("GDT","test_value=" + weather.testValue)
+
             Column {
                 Text(
                     text = "Location: ${weather.location.name}",
@@ -114,7 +178,7 @@ fun CurrentWeatherSection(currentWeatherState: UiState<com.palettex.codingroundp
 }
 
 @Composable
-fun ForecastWeatherSection(forecastWeatherState: UiState<com.palettex.codingroundpractice.data.entity.ForecastWeatherResponse>) {
+fun ForecastWeatherSection(forecastWeatherState: UiState<ForecastWeatherResponse>) {
     Text(
         text = "Forecast Weather",
         fontSize = 20.sp,

@@ -1,8 +1,6 @@
 package com.palettex.codingroundpractice.data.remote
 
 import com.palettex.codingroundpractice.data.entity.ForecastWeatherResponse
-import com.palettex.codingroundpractice.data.entity.User
-import com.palettex.codingroundpractice.data.entity.WallpaperItem
 import com.palettex.codingroundpractice.data.entity.WeatherResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -23,5 +21,4 @@ interface ApiService {
         @Query("aqi") aqi: String = "no",
         @Query("alerts") alerts: String = "no"
     ): ForecastWeatherResponse
-
 }
